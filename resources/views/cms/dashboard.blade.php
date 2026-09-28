@@ -1,0 +1,9 @@
+@extends('layouts.studio')
+@section('live','1')
+@section('title','Overview')
+@section('content')
+<div class="studio-heading"><div><span class="admin-kicker">YOUR EDITORIAL DESK</span><h1>A clear view of your publication.</h1><p>{{ auth()->user()->role === 'author' ? 'Your articles and their current workflow status.' : 'Real editorial activity across the publication.' }} Demo content and trashed articles are excluded.</p></div></div>
+<div class="admin-metrics">@foreach(['draft'=>'Drafts','in-review'=>'In review','scheduled'=>'Scheduled','published'=>'Published'] as $status=>$label)<div><span>{{ $label }}</span><strong>{{ $counts[$status] ?? 0 }}</strong><a href="{{ route('admin.articles',['status'=>$status]) }}">View articles &rarr;</a></div>@endforeach</div>
+<section class="studio-panel"><h2>Recently updated</h2><div class="studio-table-wrap"><table class="admin-table"><thead><tr><th>Article</th><th>Author</th><th>Status</th><th>Updated</th></tr></thead><tbody>@forelse($articles as $article)<tr><td><a href="{{ route('admin.articles.edit',$article) }}">{{ $article->title }}</a></td><td>{{ $article->authorProfile?->name ?? 'Unassigned' }}</td><td>{{ ucfirst(str_replace('-',' ',$article->status)) }}</td><td>{{ $article->updated_at->format('M j, Y') }}</td></tr>@empty<tr><td colspan="4">Your editorial desk is ready. Create your first draft to get started.</td></tr>@endforelse</tbody></table></div><div class="operations-links"><a class="a-button primary" href="{{ route('admin.editor') }}">Write an article</a><a class="a-button secondary" href="{{ route('admin.articles') }}">All articles</a></div></section>
+<section class="studio-panel"><h2>Publication services</h2><p>Analytics, advertising and public comments are inactive. Newsletter signup is disabled; reader accounts are planned for a later phase.</p><p>Traffic and subscriber metrics will appear only after a service is connected.</p></section>
+@endsection

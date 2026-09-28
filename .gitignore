@@ -17,3 +17,13 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/.browser-cache
+/.browser-runtime
+
+/.browser-cache
+/.browser-runtime
+
+/database/*.sqlite
+/database/*.sqlite-*
+
+/public/assets/generated
