@@ -2,7 +2,7 @@
 @section('live','1')
 @section('title','Media library')
 @section('content')
-<div class="studio-heading"><div><span class="admin-kicker">EDITORIAL STUDIO</span><h1>Media library</h1><p>Store images with meaningful alternative text and rights information. New uploads are resized to a maximum 1600px edge and converted to WebP when supported.</p></div></div>
+<div class="studio-heading"><div><span class="admin-kicker">EDITORIAL STUDIO</span><h1>Media library</h1><p>Uploads are stored in public/uploads/images and are publicly accessible by URL. Upload only images intended for public use, with alternative text and rights information. New uploads are resized to a maximum 1600px edge and converted to WebP when supported.</p></div></div>
 <section class="studio-panel"><form method="post" action="{{ route('admin.media.store') }}" enctype="multipart/form-data">
 @csrf
 <label class="admin-field">Image (JPEG, PNG or WebP; up to 5 MB)<input type="file" name="image" accept="image/jpeg,image/png,image/webp" required></label>

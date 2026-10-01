@@ -27,13 +27,21 @@ class PublicationSeo
         $published = $article && ! $noindex && $article->status === 'published' && ! $article->is_demo && $article->published_at?->lte(now()) && ! $article->trashed();
         $image = $published && $article->media_asset_id ? $this->url(route('media.show', $article->media_asset_id, false)) : null;
         $schema = null;
+        $breadcrumb = null;
         if ($published) {
             $schema = ['@context' => 'https://schema.org', '@type' => 'Article', 'headline' => $article->title, 'description' => $description, 'mainEntityOfPage' => $canonical, 'datePublished' => $article->published_at->toIso8601String(), 'dateModified' => $article->updated_at->toIso8601String(), 'author' => ['@type' => 'Person', 'name' => $article->authorProfile->name, 'url' => $this->url(route('authors.show', $article->authorProfile->slug, false))], 'publisher' => ['@type' => 'Organization', 'name' => $name]];
+            $breadcrumb = ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => $this->url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => $article->category->name, 'item' => $this->url(route('categories.show', $article->category->slug, false))],
+                ['@type' => 'ListItem', 'position' => 3, 'name' => $article->title, 'item' => $canonical],
+            ]];
+            $schema['articleSection'] = $article->category->name;
+            $schema['inLanguage'] = str_replace('_', '-', config('app.locale'));
             if ($image) {
                 $schema['image'] = [$image];
             }
         }
 
-        return compact('name', 'description', 'canonical', 'noindex', 'published', 'image', 'schema') + ['title' => ($title ? $title.' | ' : '').$name];
+        return compact('name', 'description', 'canonical', 'noindex', 'published', 'image', 'schema', 'breadcrumb') + ['title' => ($title ? $title.' | ' : '').$name];
     }
 }

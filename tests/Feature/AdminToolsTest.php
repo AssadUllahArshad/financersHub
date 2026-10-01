@@ -57,7 +57,7 @@ class AdminToolsTest extends TestCase
 
     public function test_test_data_is_repeatable_and_cannot_be_published(): void
     {
-        Storage::fake('local');
+        Storage::fake('uploads');
         $this->seed(TestingContentSeeder::class);
         $count = Article::count();
         $this->seed(TestingContentSeeder::class);

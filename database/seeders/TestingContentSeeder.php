@@ -26,8 +26,8 @@ class TestingContentSeeder extends Seeder
         $writer = User::firstOrCreate(['email' => 'demo-author@example.invalid'], ['name' => 'Sample writer', 'password' => Str::random(48), 'role' => 'author']);
         $author = AuthorProfile::firstOrCreate(['user_id' => $writer->id], ['slug' => 'sample-editor', 'name' => 'Sample editorial author', 'user_id' => $writer->id, 'bio' => 'Local test profile. Replace with a verified author before publishing.', 'is_demo' => true]);
         $tags = collect(['Getting started', 'Planning', 'Explainers'])->map(fn ($name) => Tag::firstOrCreate(['slug' => Str::slug($name)], ['name' => $name, 'description' => 'Testing tag']));
-        $path = 'media/testing-editorial.png';
-        if (! Storage::disk('local')->exists($path)) {
+        $path = 'images/demo/testing-editorial.png';
+        if (! Storage::disk('uploads')->exists($path)) {
             $image = imagecreatetruecolor(1200, 675);
             imagefill($image, 0, 0, imagecolorallocate($image, 21, 99, 89));
             imagestring($image, 5, 40, 40, 'FinancersHub - local test image', imagecolorallocate($image, 255, 255, 255));
@@ -35,11 +35,12 @@ class TestingContentSeeder extends Seeder
             imagepng($image);
             $bytes = ob_get_clean();
             imagedestroy($image);
-            Storage::disk('local')->put($path, $bytes);
+            Storage::disk('uploads')->put($path, $bytes);
         }
-        $media = MediaAsset::firstOrCreate(['path' => $path], ['user_id' => $writer->id, 'original_name' => 'testing-editorial.png', 'mime_type' => 'image/png', 'size' => Storage::disk('local')->size($path), 'alt_text' => 'Green test cover for the editorial workflow', 'rights' => 'Generated locally for application testing.']);
+        $media = MediaAsset::firstOrCreate(['path' => $path], ['user_id' => $writer->id, 'original_name' => 'testing-editorial.png', 'mime_type' => 'image/png', 'size' => Storage::disk('uploads')->size($path), 'alt_text' => 'Green test cover for the editorial workflow', 'rights' => 'Generated locally for application testing.']);
         foreach (Category::orderBy('id')->get() as $index => $category) {
             $article = Article::withTrashed()->firstOrCreate(['slug' => 'sample-'.$category->slug.'-guide'], ['user_id' => $writer->id, 'author_profile_id' => $author->id, 'category_id' => $category->id, 'media_asset_id' => $media->id, 'title' => 'Sample '.$category->name.' guide', 'excerpt' => 'A test record for checking layouts, images, tags and the editorial workflow.', 'body' => '<h2>Questions to explore</h2><p>This is a local editorial test fixture, not financial guidance.</p><h2>Review checklist</h2><ul><li>Check the layout and image.</li><li>Replace this text and verify sources before publication.</li></ul>', 'status' => $index % 2 ? 'in-review' : 'draft', 'is_demo' => true, 'sources' => []]);
+            $article->categories()->syncWithoutDetaching([$category->id]);
             $article->tags()->syncWithoutDetaching($tags->pluck('id')->all());
             if (! $article->revisions()->exists()) {
                 app(\App\Services\ArticleWorkflow::class)->snapshot($article, $writer, 'seed:test-fixture');

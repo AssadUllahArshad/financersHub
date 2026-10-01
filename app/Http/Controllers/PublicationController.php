@@ -12,7 +12,7 @@ class PublicationController extends Controller
 {
     private function query()
     {
-        return Article::published()->with(['category', 'authorProfile', 'mediaAsset'])->latest('published_at');
+        return Article::published()->with(['category', 'categories', 'authorProfile', 'mediaAsset'])->latest('published_at');
     }
 
     private function design(string $view)
@@ -22,7 +22,7 @@ class PublicationController extends Controller
 
     public function home()
     {
-        $articles = $this->query()->limit(12)->get();
+        $articles = $this->query()->reorder()->orderByDesc('is_featured')->latest('published_at')->limit(12)->get();
         if ($articles->isEmpty() && $this->design('index')) {
             return view('design.index');
         }
@@ -49,7 +49,7 @@ class PublicationController extends Controller
         }
         abort_unless($category, 404);
 
-        return view('publication.category', ['articles' => $this->query()->where('category_id', $category->id)->paginate(12), 'category' => $category, 'categories' => Category::orderBy('name')->get()]);
+        return view('publication.category', ['articles' => $this->query()->inCategory($category->id)->paginate(12), 'category' => $category, 'categories' => Category::orderBy('name')->get()]);
     }
 
     public function authors()
@@ -81,7 +81,8 @@ class PublicationController extends Controller
             }
             abort(404);
         }
-        $related = $this->query()->where('category_id', $article->category_id)->whereKeyNot($article->id)->limit(3)->get();
+        $categoryIds = $article->categories->pluck('id')->push($article->category_id)->unique()->all();
+        $related = $this->query()->where(fn ($query) => $query->whereIn('category_id', $categoryIds)->orWhereHas('categories', fn ($category) => $category->whereIn('categories.id', $categoryIds)))->whereKeyNot($article->id)->limit(3)->get();
 
         return view('publication.article', compact('article', 'related'));
     }

@@ -9,7 +9,7 @@ Reviewed September 28, 2026. This is a scoped application review, not an externa
 - Login throttling rejects the sixth attempt in its configured minute. Public contact has a separate throttle, validation, consent requirement and honeypot.
 - Staff responses and authenticated page responses now request private, no-store caching. Responses served through the web middleware add nosniff, same-origin framing, referrer and permissions policies, and a limited CSP restricting base URI, embedded objects and framing. This CSP does not claim to block all script injection. Static/error responses generated outside this middleware also need hosting-level header configuration.
 - Article body HTML is reconstructed from an allowlist. Active markup, event handlers, unsafe link schemes and embeds are discarded. Structured data uses safe JSON encoding. Existing workflow/XSS tests remain part of the suite.
-- Raster uploads are validated, bounded and re-encoded. Private media is served through authorization checks; referenced assets cannot be deleted. Image rights and editorial claims still require human review.
+- Raster uploads are validated, bounded and re-encoded. Uploads now intentionally live under public/uploads and are accessible by direct URL, including images for unpublished articles. The media controller still gates its own route, but does not make these public files private; referenced assets cannot be deleted. Image rights and editorial claims still require human review.
 - Contact names, email addresses and message bodies are encrypted at rest. Admin-only inbox access is tested. APP_KEY retention and owner-approved message retention are launch requirements.
 - The read-only `financershub:preflight` command reports unsafe deployment settings without printing keys, credentials or personal records. It deliberately does not claim that passing configuration checks establishes launch readiness.
 
@@ -35,3 +35,11 @@ The functional suite covers publication visibility, authorization, revisions, co
 The local SQLite rehearsal copies only the isolated browser-test database into a new ignored directory, checks integrity and table counts, and verifies encrypted contacts using the existing local key. It does not replace or write the working publication database. A complete hosting rehearsal must also restore private media and externally backed-up secrets.
 
 See DEPLOYMENT.md for the release/backup procedure. Keep the overall Phase 7 open until dependency upgrades, content/legal approval, hosting verification and a full recovery rehearsal are complete.
+
+
+## Project cleanup ? 30 September 2026
+Temporary verification scripts, raw audit reports and screenshots referenced above have been removed. Historical results remain documented; rerun audits before release. Database backups, admin credentials, source assets and regression tests are preserved. Fixed seven unnamed article image links and topic-section text contrast. All ten MySQL migrations are applied; 51 tests / 700 assertions pass, and production assets build successfully. PHP/Laravel upgrade and deployment/provider configuration remain launch requirements.
+
+
+## PHP 8.1 compatibility and rich content ? 30 September 2026
+Owner confirmed PHP 8.1 or unknown hosting version. Laravel 13 trial reverted to Laravel 10.50.3; the runtime security upgrade remains blocked by the hosting version. Frontend dependencies updated with zero npm audit findings. See RUNTIME_AND_EDITOR.md for current security limitations, editor/image support and SEO changes.

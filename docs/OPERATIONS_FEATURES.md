@@ -72,3 +72,42 @@ Admin inbox supports exact message-reference lookup, topic filters and an Awaiti
 Switched .env to mysql / financershub on the existing local XAMPP server. All eight migrations are applied. Transferred all 17 data tables from the D: SQLite database into the previously empty MySQL data tables; normalized row values match across both databases, existing administrator credentials are preserved and contact decryption succeeds. Source SQLite retained, with a timestamped VACUUM backup in ignored .browser-runtime/before-mysql-*.sqlite. The XAMPP database remains on C:, which had approximately 30 MB free at migration time; more database-drive capacity is needed.
 
 Maintenance now catalogs every registered Artisan command and offers 21 browser actions. Pending migrations require password and explicit backup confirmation and run noninteractively with production confirmation. Interactive, destructive, secret-revealing and long-running commands remain terminal-only. Existing throttling, audit history and lock remain. Verification: 43 tests / 644 assertions, Blade compilation, local browser console load with no browser errors, and full transferred-row comparison.
+
+
+### Multiple categories, editor recovery and public uploads
+
+Articles retain a primary category and support additional category checkboxes. All selected category pages list the published article, admin category filtering includes secondary categories, referenced categories are protected, and revisions include category membership. Migration 2026_09_28_000002 backfills existing primary categories and is applied to MySQL.
+
+TinyMCE remains connected to the configured Tiny Cloud key. Local GET requests for login/admin on 127.0.0.1 redirect to localhost (same port/path/query) because the configured Tiny Cloud account accepts localhost. Production hosts must be registered with Tiny Cloud. Improved loading/retry controls and hidden-textarea validation prevent the visual editor from blocking saves. Desktop/mobile browser verification confirms initialized, editable content synchronized into the form.
+
+Maintenance task choices have a bounded scrolling panel; the full searchable command catalog is collapsed by default. No existing command permissions changed.
+
+Uploaded media now uses the uploads filesystem disk rooted at public/uploads, with new images in images/YYYY/MM. Existing demo image copied and checksum-verified into images/demo; original retained. Run php artisan media:move-to-public for legacy media on other environments; it is repeatable, verifies copies and preserves original files. Public uploads are accessible by their URL, including unpublished images. Only public-intended media belongs here. Application logs, sessions, compiled views, secrets and backups remain private. Include public/uploads in deployment backups; no storage symlink is required for uploaded media.
+
+Validation: 46 tests / 670 assertions; production assets and Blade/route compilation; browser checks for TinyMCE, 320px layouts, compact console and direct public image access. Existing production-launch and dependency-review items remain separate.
+
+
+### Reference-based article composer and reader improvements ? 29 September 2026
+
+The article editor now follows the supplied reference: title/content/image/source/SEO cards, publish and organize sidebar, category checklist, featured toggle, and fixed save actions. Includes generated slugs for new articles, unsaved-change warnings, live SEO preview, automatic reading estimates, and image upload/selection without leaving the editor. TinyMCE remains connected to the configured key.
+
+Save and apply status is transactional: a failed publication rolls back the content change. Admin/editor publication still requires real authorship, sources and content; author accounts cannot publish or feature articles. Scheduling and rescheduling use UTC. New migration adds indexed is_featured and has been applied to MySQL; published featured articles sort first on the homepage. Revisions preserve featured state.
+
+Reader pages now show reading estimates, section navigation on mobile, a reading-progress indicator, and a correction link that prefills the contact form with the article URL and topic. Shared publication footer introduces editorial standards, author and contact links. Signup remains disabled.
+
+Verification: 51 tests / 700 assertions; production asset build and Blade compilation; desktop and 320px mobile editor/reader layouts, TinyMCE editability, live MySQL JSON image upload/selection/cleanup, and isolated browser publishing with two categories. A temporary SQLite database on D: was used for publication tests; no sample article was published into the working MySQL publication.
+
+XAMPP temporarily returned disk-full errors, then live MySQL recovered. PHP's relative upload_tmp_dir also emitted a notice into JSON responses. scripts/serve-local.ps1 explicitly places upload/sys temp files on D: without altering the global XAMPP configuration. It uses the existing .env database connection. Run powershell -NoProfile -ExecutionPolicy Bypass -File scripts/serve-local.ps1 -Port 8000 and open http://localhost:8000. The verified session currently runs on port 8770. C: still needs sufficient free space for XAMPP's database files.
+
+
+### Mobile performance and storage recovery ? 30 September 2026
+
+Same local homepage and Lighthouse mobile settings: performance improved from 72 to 96. FCP 3.7s -> 1.38s; LCP 4.9s -> 2.04s; CLS 0.0013; TBT 188ms. This is a local lab result, not a hosted PageSpeed/field guarantee. Before/after reports remain in .browser-runtime/lighthouse-mobile.report.html and lighthouse-mobile-optimized.report.html.
+
+Generated 320/640/876px WebP delivery variants (quality 72) without modifying originals; design templates now offer responsive srcsets. Rebuild with php scripts/build-responsive-images.php after changing source editorial images. Three full-size delivery variants total approximately 108 KB versus 478 KB originals. Font stylesheets load without blocking first paint, with a noscript fallback. Fresh compiled CSS bundles now work locally too; stale bundles fall back to source styles so edits are not hidden. npm run build refreshes bundles.
+
+Validation: homepage mobile screenshot, no browser errors; 51 tests / 696 assertions; asset build and Blade compilation. MySQL metadata queries and a rolled-back write probe pass, encrypted contacts decrypt, public upload read/write/delete probe passes, and all ten migrations are applied. C: free space measured approximately 1.69 GB. No remaining migration/data-transfer task is blocked by the prior storage shortage. Mail-provider configuration and dependency/launch review remain separate existing items.
+
+
+## Project cleanup ? 30 September 2026
+Temporary verification scripts, raw audit reports and screenshots referenced above have been removed. Historical results remain documented; rerun audits before release. Database backups, admin credentials, source assets and regression tests are preserved. Fixed seven unnamed article image links and topic-section text contrast. All ten MySQL migrations are applied; 51 tests / 700 assertions pass, and production assets build successfully. PHP/Laravel upgrade and deployment/provider configuration remain launch requirements.

@@ -24,6 +24,7 @@ class DiscoveryController extends Controller
                 foreach (['home', 'about', 'contact', 'faq', 'authors.index', 'editorial-policy', 'disclaimer', 'privacy', 'terms'] as $route) {
                     $emit(route($route, [], false));
                 }
+                $emit(route('tools.compound-interest', [], false));
                 foreach (Article::published()->select(['id', 'slug', 'updated_at'])->lazyById() as $article) {
                     $emit(route('articles.show', $article->slug, false), $article->updated_at->toAtomString());
                 }

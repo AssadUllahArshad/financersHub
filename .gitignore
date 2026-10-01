@@ -20,10 +20,13 @@ yarn-error.log
 /.browser-cache
 /.browser-runtime
 
-/.browser-cache
-/.browser-runtime
 
 /database/*.sqlite
 /database/*.sqlite-*
 
 /public/assets/generated
+
+/public/uploads/*
+!/public/uploads/.htaccess
+
+/.tools

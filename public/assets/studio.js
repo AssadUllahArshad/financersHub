@@ -76,7 +76,8 @@
     if (title) title.textContent = event.target.value;
   });
   const key = body.dataset.tinymceKey;
-  if (!key) return;
+  if (!key) { if (status) status.textContent = 'Visual editor needs TINYMCE_API_KEY in .env. HTML editing is available below.'; return; }
+  if (status) status.textContent = 'Loading visual editor...';
   let useHtml = false;
   let healthTimer;
   const htmlButton = document.createElement('button');
@@ -93,29 +94,42 @@
     clearInterval(healthTimer);
     const editor = window.tinymce?.get('article-body');
     if (editor) { body.value = editor.getContent(); editor.remove(); }
-    htmlButton.hidden = true;
+    htmlButton.hidden = false;
+    htmlButton.textContent = 'Retry visual editor';
+    body.required = true;
     body.hidden = false;
     body.style.display = '';
     if (status) status.textContent = 'HTML editor active. If TinyMCE is unavailable, check its API key and approved domain in Tiny Cloud.';
   };
-  htmlButton.addEventListener('click', () => { fallback(); body.focus(); });
+  htmlButton.addEventListener('click', () => { if (useHtml) { useHtml = false; if (window.tinymce) script.onload(); else { script.remove(); document.head.append(script); } } else { fallback(); body.focus(); } });
   script.onerror = fallback;
   const loadTimer = setTimeout(() => { if (!window.tinymce?.get('article-body')) fallback(); }, 15000);
-  body.form?.addEventListener('submit', () => window.tinymce?.triggerSave());
+  body.form?.addEventListener('submit', event => {
+    window.tinymce?.triggerSave();
+    if (!body.value.trim()) { event.preventDefault(); if (status) status.textContent = 'Write some article content before saving.'; window.tinymce?.get('article-body')?.focus(); }
+  });
   script.onload = async () => {
     if (useHtml) return;
     try {
       await window.tinymce.init({
-        selector: '#article-body', height: 590, menubar: 'edit insert format tools',
-        plugins: 'lists link table code preview wordcount fullscreen searchreplace',
-        toolbar: 'undo redo | blocks | bold italic | bullist numlist | link table | removeformat | code preview fullscreen',
+        selector: '#article-body', height: 590, menubar: 'edit view insert format table tools',
+        plugins: 'lists link image table code preview wordcount fullscreen searchreplace charmap visualblocks',
+        toolbar: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist | link image table | subscript superscript charmap | removeformat | code preview fullscreen',
         toolbar_mode: 'sliding',
+        image_caption: true, image_advtab: true, image_description: true,
+        automatic_uploads: false, paste_data_images: false,
+        convert_urls: false,
+        image_list: Array.from(document.querySelectorAll('#featured-media option[data-url]')).map(option => ({title: option.textContent, value: new URL(option.dataset.url, location.href).pathname})),
+        content_style: 'body{font-family:Arial,sans-serif;line-height:1.7;padding:12px}img{max-width:100%;height:auto}table{border-collapse:collapse;max-width:100%}td,th{border:1px solid #ccd5d5;padding:8px}figure{max-width:100%;margin:1em 0}pre{white-space:pre-wrap}',
+
         setup(editor) { editor.on('init input change undo redo', countWords); editor.on('input change undo redo', () => editor.save()); },
       });
       clearTimeout(loadTimer);
       if (useHtml) { fallback(); return; }
       const editor = window.tinymce.get('article-body');
-      if (status) status.textContent = 'Visual editor ready. Use HTML editing if Tiny Cloud cannot validate this domain.';
+      body.required = false;
+      htmlButton.textContent = 'Use HTML editor';
+      if (status) status.textContent = 'Visual editor ready. Your content is saved when you select Save article.';
       let checks = 0;
       healthTimer = setInterval(() => {
         if (editor.options.get('disabled') || editor.mode.isReadOnly()) fallback();

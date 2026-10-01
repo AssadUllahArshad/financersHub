@@ -39,7 +39,7 @@ class AdminNavigationTest extends TestCase
 
     public function test_demo_seeder_preserves_edited_and_trashed_records(): void
     {
-        Storage::fake('local');
+        Storage::fake('uploads');
         $this->seed(AdminDemoSeeder::class);
         $article = Article::where('is_demo', true)->firstOrFail();
         $article->update(['title' => 'My retained edit']);

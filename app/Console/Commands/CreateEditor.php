@@ -18,7 +18,7 @@ class CreateEditor extends Command
     public function handle(): int
     {
         $data = ['email' => $this->argument('email'), 'role' => $this->option('role'), 'name' => $this->ask('Name'), 'password' => $this->secret('Password (at least 12 characters)')];
-        $validator = Validator::make($data, ['email' => 'required|email|unique:users', 'role' => 'required|in:admin,editor,author', 'name' => 'required|string|max:255', 'password' => 'required|string|min:12']);
+        $validator = Validator::make($data, ['email' => ['required', 'email', 'max:254', 'not_regex:/[\r\n]/', 'unique:users'], 'role' => 'required|in:admin,editor,author', 'name' => 'required|string|max:255', 'password' => 'required|string|min:12']);
         if ($validator->fails()) {
             $this->error($validator->errors()->first());
 

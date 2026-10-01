@@ -34,7 +34,7 @@ class ArticleController extends Controller
         }
 
         if ($request->filled('category')) {
-            $query->where('category_id', $request->integer('category'));
+            $query->inCategory($request->integer('category'));
         }
         if ($request->query('sort') === 'title') {
             $query->orderBy('title');
@@ -64,9 +64,9 @@ class ArticleController extends Controller
             'title' => 'required|string|max:255', 'slug' => ['required', 'string', 'max:200', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('articles')->ignore($article?->id)],
             'excerpt' => 'required|string|max:1000', 'body' => 'required|string|max:200000',
             'author_profile_id' => 'required|exists:author_profiles,id', 'category_id' => 'required|exists:categories,id', 'media_asset_id' => 'nullable|exists:media_assets,id',
-            'tags' => 'array', 'tags.*' => 'integer|exists:tags,id', 'sources' => 'nullable|string|max:5000',
+            'categories' => 'sometimes|array|max:50', 'categories.*' => 'integer|distinct|exists:categories,id', 'tags' => 'array', 'tags.*' => 'integer|exists:tags,id', 'sources' => 'nullable|string|max:5000',
             'seo_title' => 'nullable|string|max:255', 'seo_description' => 'nullable|string|max:300', 'disclosure' => 'nullable|string|max:3000',
-            'revision_id' => 'nullable|integer',
+            'revision_id' => 'nullable|integer', 'is_featured' => 'sometimes|boolean', 'save_action' => 'sometimes|in:save,apply', 'desired_status' => 'sometimes|in:draft,in-review,scheduled,published,unpublished', 'publish_date' => 'nullable|date',
         ]);
         if ($request->user()->role === 'author') {
             abort_unless(AuthorProfile::whereKey($data['author_profile_id'])->where('user_id', $request->user()->id)->exists(), 403);
@@ -75,16 +75,25 @@ class ArticleController extends Controller
             throw \Illuminate\Validation\ValidationException::withMessages(['slug' => 'This URL is reserved by an earlier article.']);
         }
         $data['body'] = $html->clean($data['body']);
+        if (trim(strip_tags($data['body'])) === '' && !str_contains($data['body'], '<img ')) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['body' => 'Add readable article content before saving.']);
+        }
         $data['sources'] = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', $data['sources'] ?? ''))));
         foreach ($data['sources'] as $source) {
             if (! filter_var($source, FILTER_VALIDATE_URL) || ! in_array(strtolower(parse_url($source, PHP_URL_SCHEME) ?? ''), ['http', 'https'], true)) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['sources' => 'Each source must be an HTTP or HTTPS URL.']);
             }
         }
+        $categoryIds = array_unique(array_merge([$data['category_id']], $data['categories'] ?? []));
+        if (array_key_exists('is_featured', $data) && ! $request->user()->can('manage-content')) {
+            unset($data['is_featured']);
+        }
+        $target = ($data['save_action'] ?? 'save') === 'apply' ? ($data['desired_status'] ?? 'draft') : null;
+        $schedule = $data['publish_date'] ?? null;
         $tags = $data['tags'] ?? [];
         $revision = $data['revision_id'] ?? null;
-        unset($data['tags'], $data['revision_id']);
-        $article = DB::transaction(function () use ($article, $new, $data, $tags, $revision, $request, $workflow) {
+        unset($data['tags'], $data['revision_id'], $data['categories'], $data['save_action'], $data['desired_status'], $data['publish_date']);
+        $article = DB::transaction(function () use ($article, $new, $data, $tags, $categoryIds, $revision, $request, $workflow, $target, $schedule) {
             if (! $new) {
                 $article = Article::lockForUpdate()->findOrFail($article->id);
                 $this->authorize('update', $article);
@@ -97,13 +106,22 @@ class ArticleController extends Controller
             } else {
                 $article = Article::create($data + ['user_id' => $request->user()->id, 'status' => 'draft']);
             }
+            $article->categories()->sync($categoryIds);
             $article->tags()->sync($tags);
             $workflow->snapshot($article, $request->user(), $new ? 'created' : 'saved');
+
+            if ($target && ($target !== $article->status || $target === 'scheduled')) {
+                if (in_array($target, ['published', 'scheduled'], true) && in_array($article->status, ['draft', 'unpublished'], true)) {
+                    $this->authorize('publish', $article);
+                    $article = $workflow->transition($article, $request->user(), 'in-review');
+                }
+                $article = $workflow->transition($article, $request->user(), $target, $schedule);
+            }
 
             return $article;
         });
 
-        return redirect()->route('admin.articles.edit', $article)->with('status', 'Draft content saved to the database.');
+        return redirect()->route('admin.articles.edit', $article)->with('status', 'Article saved. Current status: '.ucfirst(str_replace('-', ' ', $article->status)).'.');
     }
 
     public function transition(Request $request, Article $article, ArticleWorkflow $workflow)
@@ -154,13 +172,19 @@ class ArticleController extends Controller
             $workflow->snapshot($article, $request->user(), 'before revision restore');
             $data = $revision->snapshot;
             $tags = $data['tags'] ?? [];
-            unset($data['tags'], $data['slug']);
+            $categoryIds = array_unique(array_merge([$data['category_id']], $data['categories'] ?? []));
+            $validCategories = Category::whereIn('id', $categoryIds)->pluck('id')->all();
+            unset($data['tags'], $data['slug'], $data['categories']);
             \Illuminate\Support\Facades\Validator::make($data, [
                 'author_profile_id' => 'required|exists:author_profiles,id', 'category_id' => 'required|exists:categories,id', 'media_asset_id' => 'nullable|exists:media_assets,id',
             ])->validate();
             $data['body'] = $html->clean($data['body']);
+        if (trim(strip_tags($data['body'])) === '' && !str_contains($data['body'], '<img ')) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['body' => 'Add readable article content before saving.']);
+        }
             $article->fill($data + ['status' => 'draft', 'scheduled_at' => null])->save();
             $article->tags()->sync($tags);
+            $article->categories()->sync($validCategories);
             $workflow->snapshot($article, $request->user(), 'revision restored as draft');
         });
 

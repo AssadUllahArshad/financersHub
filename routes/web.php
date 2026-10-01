@@ -104,3 +104,5 @@ Route::get('/ads.txt', function () {
 
     return response($body)->header('Content-Type', 'text/plain; charset=UTF-8');
 })->name('ads-txt');
+
+Route::view('/tools/compound-interest-calculator', 'publication.calculator')->name('tools.compound-interest');

@@ -10,7 +10,7 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $credentials = $request->validate(['email' => 'required|email', 'password' => 'required|string']);
+        $credentials = $request->validate(['email' => ['required', 'email', 'max:254', 'not_regex:/[\r\n]/'], 'password' => 'required|string']);
         if (! Auth::attempt($credentials + ['role' => ['admin', 'editor', 'author']])) {
             throw ValidationException::withMessages(['email' => 'These credentials do not match an editorial account.']);
         }

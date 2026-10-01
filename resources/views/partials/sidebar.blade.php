@@ -137,6 +137,7 @@
 </div>
 @can('manage-settings')<a class="side-link {{ request()->routeIs('admin.contacts') ? 'active' : '' }}" href="{{ route('admin.contacts') }}">Contact messages ({{ \App\Models\ContactMessage::whereNull('read_at')->count() }})</a>@endcan
 @can('manage-settings')
+<a class="side-link" href="{{ route('admin.analytics') }}">Visitor analytics</a>
 <a class="side-link {{ request()->routeIs('admin.maintenance') ? 'active' : '' }}" href="{{ route('admin.maintenance') }}">Maintenance console</a>
 @endcan
 </nav>

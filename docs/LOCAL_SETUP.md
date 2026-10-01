@@ -26,9 +26,8 @@ Newsletter signup is disabled and collects no addresses. A provider interface an
 
 ## Verification
 
-`php vendor/phpunit/phpunit/phpunit --testdox` uses an isolated in-memory SQLite database. It never refreshes the working SQLite database. `php artisan view:cache` compiles Blade templates. Screenshots are in docs/screenshots.
+`php vendor/phpunit/phpunit/phpunit --testdox` uses an isolated in-memory SQLite database. It never refreshes the working SQLite database. `php artisan view:cache` compiles Blade templates. Temporary verification screenshots were removed during cleanup.
 
-Browser checks used a separate ignored .browser-runtime/verification.sqlite database, including a synthetic staff account and article. No browser-test records were added to the working publication database. `scripts/browser_setup.php` prepares this isolated database if another verification run is needed.
 
 The Windows sandbox helper still writes its own logs on C:. To avoid full-drive errors for project processes, point TEMP and TMP to a directory on D: before running PHP tests/browser tools. Browser cache/profile paths used here are .browser-cache and .browser-runtime (both ignored).
 
@@ -62,3 +61,8 @@ Run `php artisan db:seed --class=TestingContentSeeder` only in local/testing. It
 See [OPERATIONS_FEATURES.md](OPERATIONS_FEATURES.md) for contact delivery, maintenance-console limits, AdSense verification and performance changes.
 
 TinyMCE local origin: use http://localhost:8767/admin/editor when using the running preview server. The current key was verified editable on localhost; Tiny Cloud rejects 127.0.0.1 until that hostname is approved in the customer portal. The pending XAMPP switch requires free space on C: for MySQL's own data files, despite the Laravel project and temporary files being on D:.
+
+
+### Local server with temporary uploads on D:
+
+Run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/serve-local.ps1 -Port 8000`, then open `http://localhost:8000`. This uses your existing .env and MySQL database, but overrides PHP upload/system temporary directories for this process to the ignored project `.browser-runtime` folder. This avoids XAMPP relative upload-temp notices corrupting JSON upload responses. No global PHP or XAMPP configuration changes are made. Use localhost for the configured Tiny Cloud domain.

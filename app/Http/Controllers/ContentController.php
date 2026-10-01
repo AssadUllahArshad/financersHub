@@ -84,6 +84,9 @@ class ContentController extends Controller
         if ($kind === 'faq') {
             return false;
         }
+        if ($kind === 'categories') {
+            return Article::withTrashed()->inCategory($record->id)->exists();
+        }
         if ($kind === 'tags') {
             return $record->articles()->withTrashed()->exists();
         }

@@ -11,7 +11,8 @@ class ArticleWorkflow
 {
     public function snapshot(Article $article, ?User $user, string $action): void
     {
-        $snapshot = $article->only(['title', 'slug', 'excerpt', 'body', 'author_profile_id', 'category_id', 'media_asset_id', 'seo_title', 'seo_description', 'disclosure', 'sources']);
+        $snapshot = $article->only(['is_featured', 'title', 'slug', 'excerpt', 'body', 'author_profile_id', 'category_id', 'media_asset_id', 'seo_title', 'seo_description', 'disclosure', 'sources']);
+        $snapshot['categories'] = $article->categories()->pluck('categories.id')->all();
         $snapshot['tags'] = $article->tags()->pluck('tags.id')->all();
         $article->revisions()->create(['user_id' => $user?->id, 'action' => $action, 'snapshot' => $snapshot]);
     }
@@ -22,7 +23,7 @@ class ArticleWorkflow
             $article = Article::lockForUpdate()->findOrFail($article->id);
             $allowed = [
                 'draft' => ['in-review'], 'in-review' => ['draft', 'scheduled', 'published'],
-                'scheduled' => ['draft', 'published', 'unpublished'], 'published' => ['unpublished'],
+                'scheduled' => ['draft', 'scheduled', 'published', 'unpublished'], 'published' => ['unpublished'],
                 'unpublished' => ['draft', 'in-review'],
             ];
             if (! in_array($target, $allowed[$article->status] ?? [], true)) {

@@ -8,3 +8,12 @@
  document.querySelectorAll('[data-demo-form]').forEach(form=>form.addEventListener('submit',event=>{event.preventDefault();let status=form.nextElementSibling;if(!status?.matches('[role=status]')){status=document.createElement('p');status.setAttribute('role','status');status.className='notice';form.after(status)}status.textContent=form.classList.contains('contact-form')?'Preview only — your message has not been sent.':'Preview only — this form is not connected.'}));
  const query=document.getElementById('query');if(query){const params=new URLSearchParams(location.search),q=(params.get('q')||'').trim();query.value=q;const rows=[...document.querySelectorAll('[data-search]')];let visible=0;rows.forEach(row=>{const match=row.dataset.search.includes(q.toLowerCase());row.hidden=!match;if(match)visible++});document.getElementById('no-results').hidden=visible>0;document.title=(q?'Search: '+q:'Search')+' | FinancersHub'}
 })();
+
+(() => {
+ const body = document.querySelector('#article-reading-body'), bar = document.querySelector('#reading-progress-bar');
+ if(!body || !bar) return;
+ let scheduled = false;
+ const update = () => { scheduled=false; const rect=body.getBoundingClientRect(); const range=Math.max(1,rect.height-innerHeight); const progress=Math.min(1,Math.max(0,-rect.top/range)); bar.style.transform=`scaleX(${progress})`; };
+ const queue = () => { if(!scheduled){scheduled=true;requestAnimationFrame(update);} };
+ addEventListener('scroll',queue,{passive:true}); addEventListener('resize',queue); update();
+})();

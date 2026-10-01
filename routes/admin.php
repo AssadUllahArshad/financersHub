@@ -63,3 +63,5 @@ Route::get('/content/{kind}/create', [ContentController::class, 'form'])->name('
 Route::get('/content/{kind}/{id}/edit', [ContentController::class, 'form'])->name('content.edit');
 
 Route::post('/contacts/{message}/reopen', [ReaderController::class, 'reopen'])->middleware('can:manage-settings')->name('contacts.reopen');
+
+Route::get('/analytics', [\App\Http\Controllers\VisitorAnalyticsController::class, 'index'])->middleware('can:manage-settings')->name('analytics');

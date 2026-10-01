@@ -52,13 +52,17 @@ class MediaController extends Controller
         imagedestroy($image);
         abort_unless($encoded && strlen($bytes), 422, 'The image could not be encoded.');
         $mime = $webp ? 'image/webp' : 'image/png';
-        $path = 'media/'.Str::uuid().($webp ? '.webp' : '.png');
-        abort_unless(Storage::disk('local')->put($path, $bytes), 500, 'Image could not be stored.');
+        $path = 'images/'.now()->format('Y/m').'/'.Str::uuid().($webp ? '.webp' : '.png');
+        abort_unless(Storage::disk('uploads')->put($path, $bytes), 500, 'Image could not be stored.');
         try {
-            MediaAsset::create(['user_id' => $request->user()->id, 'path' => $path, 'original_name' => mb_substr($upload->getClientOriginalName(), 0, 255), 'mime_type' => $mime, 'size' => strlen($bytes), 'alt_text' => $data['alt_text'], 'rights' => $data['rights']]);
+            $media = MediaAsset::create(['user_id' => $request->user()->id, 'path' => $path, 'original_name' => mb_substr($upload->getClientOriginalName(), 0, 255), 'mime_type' => $mime, 'size' => strlen($bytes), 'alt_text' => $data['alt_text'], 'rights' => $data['rights']]);
         } catch (\Throwable $error) {
-            Storage::disk('local')->delete($path);
+            Storage::disk('uploads')->delete($path);
             throw $error;
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['id' => $media->id, 'name' => $media->original_name, 'alt' => $media->alt_text, 'url' => asset('uploads/'.$media->path)], 201);
         }
 
         return back()->with('status', 'Image uploaded.');
@@ -75,22 +79,22 @@ class MediaController extends Controller
     public function destroy(MediaAsset $media)
     {
         $this->authorize('manage-content');
-        if (Article::withTrashed()->where('media_asset_id', $media->id)->exists()) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['image' => 'This image is referenced by an article, including articles in trash.']);
+        if (Article::withTrashed()->where(fn ($query) => $query->where('media_asset_id', $media->id)->orWhere('body', 'like', '%'.$media->path.'%')->orWhere('body', 'like', '%/media/'.$media->id.'"%'))->exists() || \App\Models\ArticleRevision::query()->select('snapshot')->cursor()->contains(fn ($revision) => (int) ($revision->snapshot['media_asset_id'] ?? 0) === $media->id || str_contains($revision->snapshot['body'] ?? '', $media->path) || str_contains($revision->snapshot['body'] ?? '', '/media/'.$media->id.'"'))) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['image' => 'This image is referenced by an article, including articles in trash and saved revisions.']);
         }
         $path = $media->path;
         $media->delete();
-        Storage::disk('local')->delete($path);
+        Storage::disk('uploads')->delete($path);
 
         return back()->with('status', 'Image deleted.');
     }
 
     public function show(Request $request, MediaAsset $media)
     {
-        $public = Article::published()->where('media_asset_id', $media->id)->exists();
+        $public = Article::published()->where(fn ($query) => $query->where('media_asset_id', $media->id)->orWhere('body', 'like', '%/media/'.$media->id.'"%')->orWhere('body', 'like', '%'.$media->path.'%'))->exists();
         abort_unless($public || $request->user()?->can('studio'), 404);
-        abort_unless(Storage::disk('local')->exists($media->path), 404);
+        abort_unless(Storage::disk('uploads')->exists($media->path), 404);
 
-        return response()->file(Storage::disk('local')->path($media->path), ['Content-Type' => $media->mime_type === 'image/webp' ? 'image/webp' : 'image/png', 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => $public ? 'public, max-age=300' : 'private, no-store']);
+        return response()->file(Storage::disk('uploads')->path($media->path), ['Content-Type' => $media->mime_type === 'image/webp' ? 'image/webp' : 'image/png', 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => $public ? 'public, max-age=300' : 'private, no-store']);
     }
 }

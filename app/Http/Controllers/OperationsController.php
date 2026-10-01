@@ -17,7 +17,17 @@ class OperationsController extends Controller
         $counts = (clone $query)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
         $articles = $query->with('authorProfile')->latest('updated_at')->limit(8)->get();
 
-        return view('cms.dashboard', compact('counts', 'articles'));
+        $audience = null;
+        $inbox = null;
+        if ($request->user()->can('manage-settings')) {
+            $visits = \Illuminate\Support\Facades\DB::table('visitor_traces')->where('visited_at', '>=', now()->subDays(6)->startOfDay());
+            $daily = (clone $visits)->selectRaw('DATE(visited_at) as day, COUNT(*) as total')->groupBy('day')->pluck('total', 'day');
+            $trend = collect(range(6, 0))->map(fn ($offset) => ['label' => now()->subDays($offset)->format('D'), 'date' => now()->subDays($offset)->format('M j'), 'total' => (int) ($daily[now()->subDays($offset)->toDateString()] ?? 0)]);
+            $audience = ['views' => (clone $visits)->count(), 'visitors' => (clone $visits)->distinct()->count('visitor_hash'), 'trend' => $trend, 'peak' => max(1, $trend->max('total'))];
+            $inbox = ['unread' => \App\Models\ContactMessage::whereNull('read_at')->count(), 'pending' => \App\Models\ContactMessage::whereNull('resolved_at')->count()];
+        }
+        $total = $counts->sum();
+        return view('cms.dashboard', compact('counts', 'articles', 'audience', 'inbox', 'total'));
     }
 
     public function seo()
