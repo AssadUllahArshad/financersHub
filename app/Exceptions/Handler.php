@@ -7,6 +7,12 @@ use Throwable;
 
 class Handler extends ExceptionHandler
 {
+    public function render($request, Throwable $e)
+    {
+        app()->setLocale($request->segment(1) === 'es' ? 'es' : 'en');
+
+        return parent::render($request, $e);
+    }
     /**
      * The list of the inputs that are never flashed to the session on validation exceptions.
      *

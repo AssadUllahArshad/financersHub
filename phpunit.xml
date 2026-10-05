@@ -19,6 +19,7 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="SEARCH_INDEXING_ENABLED" value="true" force="true"/>
         <env name="FINANCERSHUB_DESIGN_PREVIEW" value="true"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>

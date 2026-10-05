@@ -1,6 +1,6 @@
 # Working locally
 
-All project data and browser artifacts are on D:. The current local database is database/financershub.sqlite (ignored by Git). The original empty MySQL database was left in place; it could not write to the full C: drive.
+Current state (5 October 2026): the application uses XAMPP MySQL `financershub`. The earlier SQLite fallback and disk-full migration blockage are resolved. Project files and browser artifacts remain on D:; XAMPP database files may still reside on C:. See OUTSTANDING_WORK.md for the current backlog. Dated entries below are historical.
 
 ## Run
 
@@ -9,7 +9,7 @@ All project data and browser artifacts are on D:. The current local database is 
 - Create your own staff account: `php artisan financershub:user you@example.com`. The command prompts for a name and password. No shared/default owner password exists. Use `--role=editor` or `--role=author` for other staff.
 - Start `php artisan serve --port=8765` and open http://127.0.0.1:8765. Sign in at /login.
 - Set `TINYMCE_API_KEY` in .env and approve your development/production domains in Tiny Cloud. If loading or domain validation fails, the HTML textarea remains usable. An explicit Use HTML editor button is available while the visual editor is active. See [TinyMCE domain/API-key documentation](https://www.tiny.cloud/docs/tinymce/latest/invalid-api-key/).
-- The supplied prebuilt assets are served from public/assets; rendering does not require a Vite development server. The original design/source package remains under resources/views/FinancersHub-frontend.
+- Run `npm ci` and `npm run build` for Vite assets in `public/build`. Static artwork lives in `public/assets`, and uploads in `public/uploads`. Prototype directories were removed during cleanup; active public views are in `publication` and `pages`. Run `php artisan media:build-responsive` to backfill smaller delivery sizes for existing uploads.
 - `FINANCERSHUB_DESIGN_PREVIEW` defaults on only for local environments. Set it to false to see only database-backed publication content. Preview pages are labeled and noindex. Do not launch with preview enabled or unreviewed policy/content copy.
 
 ## Editorial workflow

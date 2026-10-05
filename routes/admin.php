@@ -1,12 +1,15 @@
 <?php
 
-use App\Http\Controllers\ArticleController;
-use App\Http\Controllers\ContentController;
-use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\Admin\ArticleController;
+use App\Http\Controllers\Admin\ContentController;
+use App\Http\Controllers\Admin\MaintenanceController;
+use App\Http\Controllers\Admin\OperationsController;
 use App\Http\Controllers\MediaController;
-use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\ReaderController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/articles/{article}/translations/{locale}', [\App\Http\Controllers\Admin\ArticleTranslationController::class, 'edit'])->name('articles.translations.edit');
+Route::put('/articles/{article}/translations/{locale}', [\App\Http\Controllers\Admin\ArticleTranslationController::class, 'update'])->name('articles.translations.update');
 
 Route::get('/advertisements', [OperationsController::class, 'advertising'])->name('advertisements');
 Route::redirect('/advertisements.html', '/admin/advertisements', 301);
@@ -16,7 +19,7 @@ Route::get('/authors', [ContentController::class, 'index'])->defaults('kind', 'a
 Route::redirect('/authors.html', '/admin/authors', 301);
 Route::get('/categories', [ContentController::class, 'index'])->defaults('kind', 'categories')->name('categories');
 Route::redirect('/categories.html', '/admin/categories', 301);
-Route::view('/comments', 'cms.inactive', ['service' => 'Comments'])->name('comments');
+Route::view('/comments', 'admin.inactive', ['service' => 'Comments'])->name('comments');
 Route::redirect('/comments.html', '/admin/comments', 301);
 Route::get('/editor', [ArticleController::class, 'editor'])->name('editor');
 Route::redirect('/editor.html', '/admin/editor', 301);
@@ -65,3 +68,7 @@ Route::get('/content/{kind}/{id}/edit', [ContentController::class, 'form'])->nam
 Route::post('/contacts/{message}/reopen', [ReaderController::class, 'reopen'])->middleware('can:manage-settings')->name('contacts.reopen');
 
 Route::get('/analytics', [\App\Http\Controllers\VisitorAnalyticsController::class, 'index'])->middleware('can:manage-settings')->name('analytics');
+
+Route::get('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'edit'])->name('profile');
+Route::put('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'update'])->middleware('throttle:6,1')->name('profile.update');
+Route::put('/profile/password', [\App\Http\Controllers\Admin\ProfileController::class, 'password'])->middleware('throttle:6,1')->name('profile.password');

@@ -11,6 +11,6 @@ class VisitorAnalyticsController extends Controller {
         $referrers=(clone $query)->select('referrer_host')->selectRaw('COUNT(*) as views')->groupBy('referrer_host')->orderByDesc('views')->limit(10)->get();
         $devices=(clone $query)->select('device','browser')->selectRaw('COUNT(*) as views')->groupBy('device','browser')->orderByDesc('views')->get();
         $recent=(clone $query)->orderByDesc('visited_at')->paginate(25)->withQueryString();
-        return view('cms.analytics',compact('days','views','visitors','pages','referrers','devices','recent'));
+        return view('admin.analytics',compact('days','views','visitors','pages','referrers','devices','recent'));
     }
 }

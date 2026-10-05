@@ -35,6 +35,60 @@ class Article extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function translations()
+    {
+        return $this->hasMany(ArticleTranslation::class);
+    }
+
+    public function publicTranslation(): ?ArticleTranslation
+    {
+        if (app()->getLocale() === 'en') {
+            return null;
+        }
+
+        return $this->translations->first(fn ($translation) => $translation->locale === app()->getLocale() && $translation->is_published);
+    }
+
+    public function getContentLocaleAttribute(): string
+    {
+        return $this->publicTranslation()?->locale ?? 'en';
+    }
+
+    private function translated(string $key, mixed $value): mixed
+    {
+        return $this->publicTranslation()?->$key ?: $value;
+    }
+
+    public function getTitleAttribute($value)
+    {
+        return $this->translated('title', $value);
+    }
+
+    public function getExcerptAttribute($value)
+    {
+        return $this->translated('excerpt', $value);
+    }
+
+    public function getBodyAttribute($value)
+    {
+        return $this->translated('body', $value);
+    }
+
+    public function getDisclosureAttribute($value)
+    {
+        return $this->translated('disclosure', $value);
+    }
+
+    public function getSeoTitleAttribute($value)
+    {
+        return $this->publicTranslation() ? ($this->publicTranslation()->seo_title ?: $this->title) : $value;
+    }
+
+    public function getSeoDescriptionAttribute($value)
+    {
+        return $this->publicTranslation() ? ($this->publicTranslation()->seo_description ?: $this->excerpt) : $value;
+    }
+
     public function authorProfile()
     {
         return $this->belongsTo(AuthorProfile::class);

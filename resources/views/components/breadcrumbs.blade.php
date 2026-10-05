@@ -1,2 +1,13 @@
 @props(['items' => []])
-<nav class="bread" aria-label="Breadcrumb"><a href="{{ url('/') }}">Home</a>@foreach ($items as $item) / @if(!empty($item['url']))<a href="{{ $item['url'] }}">{{ $item['label'] }}</a>@else<span aria-current="page">{{ $item['label'] }}</span>@endif @endforeach</nav>
+<nav {{ $attributes->class(['bread', 'page-breadcrumbs']) }} aria-label="{{ __('Breadcrumb') }}">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ \App\Support\Localization::route('home') }}"><x-icon name="home" />{{ __('Home') }}</a></li>
+        @foreach ($items as $item)
+            <li class="breadcrumb-item"><span class="breadcrumb-separator" aria-hidden="true">/</span>
+                @if (!empty($item['url']) && !$loop->last)<a href="{{ $item['url'] }}">{{ __($item['label'] ?? '') }}</a>@else<span
+                        aria-current="page">{{ __($item['label'] ?? '') }}</span>
+                @endif
+            </li>
+        @endforeach
+    </ol>
+</nav>

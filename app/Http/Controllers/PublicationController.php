@@ -12,41 +12,39 @@ class PublicationController extends Controller
 {
     private function query()
     {
-        return Article::published()->with(['category', 'categories', 'authorProfile', 'mediaAsset'])->latest('published_at');
-    }
-
-    private function design(string $view)
-    {
-        return config('financershub.design_preview') && view()->exists('design.'.$view);
+        return Article::published()->with(['category', 'categories', 'authorProfile', 'mediaAsset', 'translations'])->latest('published_at');
     }
 
     public function home()
     {
         $articles = $this->query()->reorder()->orderByDesc('is_featured')->latest('published_at')->limit(12)->get();
-        if ($articles->isEmpty() && $this->design('index')) {
-            return view('design.index');
-        }
 
-        return view('publication.home', compact('articles'));
+        return view('publication.home', ['articles' => $articles, 'topics' => Category::orderBy('name')->get()]);
     }
 
     public function search(Request $request)
     {
-        if (! Article::published()->exists() && $this->design('search')) {
-            return view('design.search');
+        $filters = $request->validate(['q' => 'nullable|string|max:200', 'topic' => 'nullable|string|exists:categories,slug', 'sort' => 'nullable|in:newest,oldest,title']);
+        $query = trim($filters['q'] ?? '');
+        $topic = $filters['topic'] ?? '';
+        $sort = $filters['sort'] ?? 'newest';
+        $articles = $this->query()->when($query !== '', fn ($q) => $q->where(function ($q) use ($query) {
+            $q->where('title', 'like', '%'.$query.'%')->orWhere('excerpt', 'like', '%'.$query.'%')->orWhere('body', 'like', '%'.$query.'%');
+            if (app()->getLocale() !== 'en') {
+                $q->orWhereHas('translations', fn ($translation) => $translation->where('locale', app()->getLocale())->where('is_published', true)->where(fn ($text) => $text->where('title', 'like', '%'.$query.'%')->orWhere('excerpt', 'like', '%'.$query.'%')->orWhere('body', 'like', '%'.$query.'%')));
+            }
+        }));
+        if ($topic !== '') {
+            $articles->inCategory(Category::where('slug', $topic)->value('id'));
         }
-        $query = mb_substr(trim((string) $request->query('q', '')), 0, 200);
-        $articles = $this->query()->when($query !== '', fn ($q) => $q->where(fn ($q) => $q->where('title', 'like', '%'.$query.'%')->orWhere('excerpt', 'like', '%'.$query.'%')->orWhere('body', 'like', '%'.$query.'%')))->paginate(12)->withQueryString();
+        $articles->reorder()->orderBy($sort === 'title' ? 'title' : 'published_at', $sort === 'newest' ? 'desc' : 'asc')->orderBy('id');
 
-        return view('publication.library', ['articles' => $articles, 'heading' => 'Article library', 'description' => 'Search published guides.', 'query' => $query]);
+        return view('publication.library', ['articles' => $articles->paginate(12)->withQueryString(), 'heading' => 'Article library', 'description' => 'Find a clear starting point for your next money question.', 'query' => $query, 'topic' => $topic, 'sort' => $sort, 'topics' => Category::orderBy('name')->get()]);
     }
 
     public function category(string $slug)
     {
         $category = Category::where('slug', $slug)->first();
-        if (! $category && $this->design('categories.'.$slug)) {
-            return view('design.categories.'.$slug);
-        }
         abort_unless($category, 404);
 
         return view('publication.category', ['articles' => $this->query()->inCategory($category->id)->paginate(12), 'category' => $category, 'categories' => Category::orderBy('name')->get()]);
@@ -54,15 +52,12 @@ class PublicationController extends Controller
 
     public function authors()
     {
-        return view('publication.authors', ['authors' => AuthorProfile::where('is_demo', false)->whereHas('articles', fn ($query) => $query->published())->orderBy('name')->get()]);
+        return view('publication.authors', ['authors' => AuthorProfile::where('is_demo', false)->where(fn ($query) => $query->where('schema_type', 'Organization')->orWhereHas('articles', fn ($articles) => $articles->published()))->orderBy('name')->get()]);
     }
 
     public function author(string $slug)
     {
         $author = AuthorProfile::where('slug', $slug)->where('is_demo', false)->first();
-        if (! $author && $this->design('authors.'.$slug)) {
-            return view('design.authors.'.$slug);
-        }
         abort_unless($author, 404);
 
         return view('publication.author', ['articles' => $this->query()->where('author_profile_id', $author->id)->paginate(12), 'author' => $author]);
@@ -74,10 +69,7 @@ class PublicationController extends Controller
         if (! $article) {
             $redirect = ArticleRedirect::where('slug', $slug)->first();
             if ($redirect && $redirect->article && $this->query()->whereKey($redirect->article_id)->exists()) {
-                return redirect()->route('articles.show', $redirect->article->slug, 301);
-            }
-            if (! Article::withTrashed()->where('slug', $slug)->exists() && $this->design('articles.'.$slug)) {
-                return view('design.articles.'.$slug);
+                return redirect(\App\Support\Localization::route('articles.show', $redirect->article->slug), 301);
             }
             abort(404);
         }

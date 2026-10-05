@@ -20,6 +20,7 @@ class PublicationPreflight extends Command
             'Application key configured' => filled(config('app.key')),
             'HTTPS canonical origin configured' => filter_var(config('app.url'), FILTER_VALIDATE_URL) && parse_url(config('app.url'), PHP_URL_SCHEME) === 'https' && ! in_array(parse_url(config('app.url'), PHP_URL_HOST), ['localhost', '127.0.0.1', '::1'], true),
             'Design preview disabled' => ! config('financershub.design_preview'),
+            'Search indexing enabled for launch' => (bool) config('financershub.search_indexing_enabled'),
             'Secure session cookies enabled' => (bool) config('session.secure'),
             'HTTP-only session cookies enabled' => (bool) config('session.http_only'),
             'Persistent session driver configured' => ! in_array(config('session.driver'), ['array', 'cookie', null], true),

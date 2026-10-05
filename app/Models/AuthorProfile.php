@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AuthorProfile extends Model
 {
-    protected $fillable = ['user_id', 'name', 'slug', 'bio', 'is_demo'];
+    protected $fillable = ['user_id', 'name', 'slug', 'bio', 'is_demo', 'schema_type'];
 
     protected $casts = ['is_demo' => 'boolean'];
 

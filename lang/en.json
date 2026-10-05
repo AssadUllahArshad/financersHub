@@ -1,0 +1,3 @@
+{
+  "calculator_method": "Interest compounds monthly at your annual rate divided by 12. Contributions are added at the end of each month. Each month's balance equals the previous balance multiplied by (1 + annual rate / 1200), plus the monthly contribution."
+}

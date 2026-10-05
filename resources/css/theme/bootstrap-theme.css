@@ -1,0 +1,262 @@
+/* Brand tokens applied to Bootstrap controls; layout rules remain in theme modules. */
+.language-switch {
+    display: inline-flex;
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 3px;
+    gap: 2px;
+}
+.language-switch a {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    min-height: 34px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+}
+.language-switch a[aria-current] {
+    background: #08776d;
+    color: white;
+}
+.language-switch a:hover {
+    background: var(--soft);
+    color: var(--ink);
+}
+@media (max-width: 540px) {
+    .masthead .masthead-main {
+        height: auto;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding-block: 12px;
+    }
+    .masthead-main > .logo {
+        width: clamp(120px, 36vw, 170px);
+        flex: none;
+    }
+    .masthead-main .actions {
+        gap: 5px;
+    }
+}
+.theme-toggle.iconbtn,
+.studio-theme {
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--soft);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    transition:
+        background-color 0.2s,
+        border-color 0.2s;
+}
+.theme-toggle:hover,
+.studio-theme:hover {
+    border-color: var(--teal);
+}
+.theme-toggle .theme-sun,
+.studio-theme .theme-sun {
+    display: none;
+}
+[data-theme="dark"] .theme-toggle .theme-moon,
+[data-admin-theme="dark"] .studio-theme .theme-moon {
+    display: none;
+}
+[data-theme="dark"] .theme-toggle .theme-sun,
+[data-admin-theme="dark"] .studio-theme .theme-sun {
+    display: block;
+    color: #f4c76a;
+}
+:root {
+    --bs-body-color: var(--ink);
+    --bs-body-bg: var(--surface);
+    --bs-border-color: var(--line);
+    --bs-primary: #137b73;
+}
+/* Supply Bootstrap's interaction tokens as well as the resting brand colors. */
+.btn {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #08776d;
+    --bs-btn-border-color: #08776d;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #075d55;
+    --bs-btn-hover-border-color: #075d55;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #064f48;
+    --bs-btn-active-border-color: #064f48;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #08776d;
+    --bs-btn-disabled-border-color: #08776d;
+    --bs-btn-focus-shadow-rgb: 19, 123, 115;
+    background-color: var(--bs-btn-bg);
+    border-color: var(--bs-btn-border-color);
+}
+.btn.light,
+.btn.ghost {
+    --bs-btn-color: var(--ink);
+    --bs-btn-bg: var(--surface);
+    --bs-btn-border-color: var(--line);
+    --bs-btn-hover-color: var(--ink);
+    --bs-btn-hover-bg: var(--soft);
+    --bs-btn-hover-border-color: var(--teal);
+    --bs-btn-active-color: var(--ink);
+    --bs-btn-active-bg: var(--soft);
+    --bs-btn-active-border-color: var(--teal);
+    --bs-btn-disabled-color: var(--muted);
+    --bs-btn-disabled-bg: var(--surface);
+    --bs-btn-disabled-border-color: var(--line);
+}
+.btn.light:hover,
+.btn.ghost:hover {
+    color: var(--bs-btn-hover-color);
+    background: var(--bs-btn-hover-bg);
+    border-color: var(--bs-btn-hover-border-color);
+}
+.btn:focus-visible,
+.page-link:focus-visible {
+    outline: 3px solid var(--teal);
+    outline-offset: 3px;
+}
+[data-admin-theme="dark"] .studio {
+    --studio-teal: #70d5c5;
+}
+[data-admin-theme="dark"] .admin-tabs a.active {
+    color: #102c3a;
+}
+[data-admin-theme="dark"] .topbar-actions .topbar-avatar {
+    color: #153344;
+}
+.btn > .ui-icon,
+.a-button > .ui-icon {
+    margin-inline-end: 0;
+}
+.header-search button > .ui-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+[data-theme="dark"],
+[data-admin-theme="dark"] {
+    color-scheme: dark;
+}
+.form-control::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+.studio .form-control::placeholder {
+    color: var(--studio-muted);
+}
+.form-control:disabled,
+.form-select:disabled {
+    color: var(--muted);
+    background-color: var(--soft);
+    opacity: 0.7;
+}
+[data-theme="dark"] .form-select,
+[data-admin-theme="dark"] .form-select {
+    --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adbfbe' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+.form-check-input:not(:checked) {
+    background-color: var(--surface);
+    border-color: var(--muted);
+}
+.studio .form-check-input:not(:checked) {
+    background-color: var(--studio-white);
+    border-color: var(--studio-muted);
+}
+.form-check-input:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 3px;
+}
+.form-control,
+.form-select {
+    color: var(--ink);
+    background-color: var(--surface);
+    border-color: var(--line);
+}
+.form-control:focus,
+.form-select:focus {
+    color: var(--ink);
+    background-color: var(--surface);
+    border-color: var(--teal);
+    box-shadow: 0 0 0 0.2rem #137b731c;
+}
+.studio .form-control,
+.studio .form-select {
+    color: var(--studio-ink);
+    background-color: var(--studio-white);
+    border-color: var(--studio-line);
+}
+.studio .form-control:focus,
+.studio .form-select:focus {
+    border-color: var(--studio-teal);
+}
+.form-check-input {
+    flex-shrink: 0;
+    accent-color: var(--teal);
+}
+.form-check-input:checked {
+    background-color: #137b73;
+    border-color: #137b73;
+}
+.page-breadcrumbs .breadcrumb {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+}
+.page-breadcrumbs .breadcrumb-item + .breadcrumb-item {
+    padding-left: 0;
+}
+.page-breadcrumbs .breadcrumb-item + .breadcrumb-item::before {
+    display: none;
+}
+.profile-grid.row {
+    display: flex;
+    margin: 0 -12px;
+    gap: 0;
+}
+.profile-grid.row > .profile-column {
+    padding: 0 12px;
+    margin-bottom: 24px;
+}
+.profile-grid.row .composer-card {
+    height: 100%;
+}
+.pagination .page-link {
+    color: var(--ink);
+    background: var(--surface);
+    border-color: var(--line);
+}
+.pagination-shell .pagination {
+    list-style: none;
+    padding-left: 0;
+}
+.pagination-shell .page-link {
+    border-radius: 7px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    padding: 9px 15px;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+.pagination-shell .pagination-position {
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+.pagination-shell .page-item.disabled .page-link {
+    background: var(--surface);
+    color: var(--muted);
+    opacity: 0.6;
+}
+.studio .pagination-shell .page-link {
+    background: var(--studio-white);
+    color: var(--studio-ink);
+    border-color: var(--studio-line);
+}

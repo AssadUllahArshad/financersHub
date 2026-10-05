@@ -1,1 +1,0 @@
-<section class="newsletter"><div><span class="eyebrow">The weekly brief</span><h2>One useful finance idea at a time.</h2><p>Newsletter delivery will be connected later.</p></div><form data-demo-form><input class="field" type="email" required aria-label="Email address" placeholder="Email address"><button class="btn">Join the list</button></form></section>

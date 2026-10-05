@@ -24,7 +24,6 @@ yarn-error.log
 /database/*.sqlite
 /database/*.sqlite-*
 
-/public/assets/generated
 
 /public/uploads/*
 !/public/uploads/.htaccess

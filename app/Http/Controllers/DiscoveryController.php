@@ -23,16 +23,23 @@ class DiscoveryController extends Controller
             if (! config('financershub.design_preview')) {
                 foreach (['home', 'about', 'contact', 'faq', 'authors.index', 'editorial-policy', 'disclaimer', 'privacy', 'terms'] as $route) {
                     $emit(route($route, [], false));
+                    $emit(route('es.'.$route, [], false));
                 }
                 $emit(route('tools.compound-interest', [], false));
-                foreach (Article::published()->select(['id', 'slug', 'updated_at'])->lazyById() as $article) {
+                $emit(route('es.tools.compound-interest', [], false));
+                foreach (Article::published()->with('translations')->select(['id', 'slug', 'updated_at'])->lazyById() as $article) {
                     $emit(route('articles.show', $article->slug, false), $article->updated_at->toAtomString());
+                    foreach ($article->translations->where('is_published', true)->where('locale', 'es') as $translation) {
+                        $emit(route('es.articles.show', $article->slug, false), $translation->updated_at->max($article->updated_at)->toAtomString());
+                    }
                 }
                 foreach (Category::whereHas('articles', fn ($query) => $query->published())->lazyById() as $category) {
                     $emit(route('categories.show', $category->slug, false));
+                    $emit(route('es.categories.show', $category->slug, false));
                 }
-                foreach (AuthorProfile::where('is_demo', false)->whereHas('articles', fn ($query) => $query->published())->lazyById() as $author) {
+                foreach (AuthorProfile::where('is_demo', false)->where(fn ($query) => $query->where('schema_type', 'Organization')->orWhereHas('articles', fn ($articles) => $articles->published()))->lazyById() as $author) {
                     $emit(route('authors.show', $author->slug, false));
+                    $emit(route('es.authors.show', $author->slug, false));
                 }
             }
             echo '</urlset>';
@@ -41,7 +48,7 @@ class DiscoveryController extends Controller
 
     public function robots(PublicationSeo $seo)
     {
-        $body = config('financershub.design_preview') ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin\nDisallow: /login\nDisallow: /search\nSitemap: ".$seo->url('/sitemap.xml')."\n";
+        $body = (config('financershub.design_preview') || !config('financershub.search_indexing_enabled')) ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin\nDisallow: /login\nDisallow: /search\nSitemap: ".$seo->url('/sitemap.xml')."\n";
 
         return response($body)->header('Content-Type', 'text/plain; charset=UTF-8');
     }

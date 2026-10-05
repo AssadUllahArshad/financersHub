@@ -1,5 +1,7 @@
 # FinancersHub implementation plan
 
+Current backlog reconciliation: [OUTSTANDING_WORK.md](OUTSTANDING_WORK.md), reviewed 5 October 2026 against code and local database state. Historical entries below may describe work subsequently completed. The current review excludes PHP/Laravel/security upgrades at the owner's request.
+
 ## Audit (26 September 2026)
 
 - Fresh Laravel 10 skeleton, PHP requirement ^8.1; installed CLI PHP 8.1.25. Composer dependencies are installed. No application changes or existing CMS were found.

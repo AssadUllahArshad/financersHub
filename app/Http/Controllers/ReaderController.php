@@ -22,7 +22,7 @@ class ReaderController extends Controller
 
         $contact->forceFill(['notification_status' => app(\App\Services\ContactDelivery::class)->configured() ? 'queued' : 'not_configured'])->save();
 
-        return redirect()->route('contact')->with('contact_status', 'Your message has been stored for editorial review. Reference: '.$reference);
+        return redirect(\App\Support\Localization::route('contact'))->with('contact_status', __('Your message has been stored for editorial review. Reference: :reference', ['reference' => $reference]));
     }
 
     public function contacts(Request $request)
@@ -52,7 +52,7 @@ class ReaderController extends Controller
             $query->where('notification_status', 'failed');
         }
 
-        return view('cms.contacts', ['messages' => $query->paginate(15)->withQueryString(), 'unread' => ContactMessage::whereNull('read_at')->count(), 'filter' => $filter, 'deliveryReady' => app(\App\Services\ContactDelivery::class)->configured()]);
+        return view('admin.contacts', ['messages' => $query->paginate(15)->withQueryString(), 'unread' => ContactMessage::whereNull('read_at')->count(), 'filter' => $filter, 'deliveryReady' => app(\App\Services\ContactDelivery::class)->configured()]);
     }
 
     public function resolve(ContactMessage $message)
@@ -94,7 +94,7 @@ class ReaderController extends Controller
     {
         $this->authorize('manage-settings');
 
-        return view('cms.newsletter', ['confirmed' => NewsletterSubscriber::where('status', 'confirmed')->count()]);
+        return view('admin.newsletter', ['confirmed' => NewsletterSubscriber::where('status', 'confirmed')->count()]);
     }
 
     public function subscribe()

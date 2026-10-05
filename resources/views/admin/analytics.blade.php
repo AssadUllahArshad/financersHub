@@ -1,0 +1,87 @@
+@extends('layouts.studio')
+@section('live', '1')
+@section('title', 'Visitor analytics')
+@section('content')
+    <div class="studio-heading">
+        <div><span class="admin-kicker">AUDIENCE</span>
+            <h1>Visitor analytics</h1>
+            <p>Approximate visitors based on protected IP hashes. Shared networks count together; changing IPs count
+                separately.</p>
+        </div>
+    </div>
+    <form class="studio-panel admin-toolbar" method="get"><label class="admin-field">Period<select class="form-select"
+                name="days">
+                @foreach ([7, 30, 90] as $period)
+                    <option value="{{ $period }}" @selected($days === $period)>Last {{ $period }} days</option>
+                @endforeach
+            </select>
+        </label><button class="a-button primary">Apply</button></form>
+    <section class="studio-panel">
+        <h2>{{ number_format($visitors) }} approximate visitors &middot; {{ number_format($views) }} page views</h2>
+        <p>One visit per IP and page per minute. Staff, known bots, Do Not Track and Global Privacy Control requests are
+            excluded. Records expire after 90 days when the scheduler runs. Tracking is
+            {{ config('financershub.analytics_enabled') ? 'enabled' : 'disabled' }}.</p>
+    </section>
+    <section class="studio-panel">
+        <h2>Popular pages</h2>
+        <div style="overflow-x:auto">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Page</th>
+                        <th>Views</th>
+                        <th>Visitors</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($pages as $page)
+                        <tr>
+                            <td style="overflow-wrap:anywhere">{{ $page->path }}</td>
+                            <td>{{ $page->views }}</td>
+                            <td>{{ $page->visitors }}</td>
+                    </tr>@empty<tr>
+                            <td colspan="3">No visits recorded in this period.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <section class="studio-panel">
+        <h2>Referrer domains</h2>
+        @forelse($referrers as $referrer)
+        <p>{{ $referrer->referrer_host ?: 'Direct / unavailable' }} &middot; {{ $referrer->views }} views</p>@empty<p>No
+                referrer data yet.</p>
+        @endforelse
+        <h2>
+            Devices and browsers</h2>
+        @foreach ($devices as $device)
+            <p>{{ $device->device }} / {{ $device->browser }} &middot; {{ $device->views }} views</p>
+        @endforeach
+    </section>
+    <section class="studio-panel">
+        <h2>Recent visits</h2>
+        <div style="overflow-x:auto">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Time (UTC)</th>
+                        <th>Visitor reference</th>
+                        <th>Page</th>
+                        <th>Device</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($recent as $visit)
+                        <tr>
+                            <td>{{ $visit->visited_at }}</td>
+                            <td>{{ substr($visit->visitor_hash, 0, 12) }}</td>
+                            <td style="overflow-wrap:anywhere">{{ $visit->path }}</td>
+                            <td>{{ $visit->device }} / {{ $visit->browser }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>{{ $recent->links() }}
+    </section>
+@endsection
